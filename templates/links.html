@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}All Links - LinkVault{% endblock %}
+
+{% block content %}
+<div class="links-page">
+    <header class="page-header">
+        <h1>All Links</h1>
+        <span class="link-count">{{ links | length }} total</span>
+    </header>
+
+    {% if links %}
+    <div class="links-table full">
+        <table>
+            <thead>
+                <tr>
+                    <th>Link</th>
+                    <th>Short URL</th>
+                    <th>Clicks</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for link in links %}
+                <tr>
+                    <td class="link-cell">
+                        <div class="link-title">{{ link.title or link.domain }}</div>
+                        <div class="link-url">{{ link.original_url | truncate(60) }}</div>
+                    </td>
+                    <td>
+                        <a href="{{ link.short_url }}" target="_blank" class="short-link">
+                            <code>/r/{{ link.short_code }}</code>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                <polyline points="15 3 21 3 21 9"/>
+                                <line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                        </a>
+                    </td>
+                    <td class="clicks-cell">
+                        <span class="click-count">{{ link.total_clicks }}</span>
+                    </td>
+                    <td>
+                        {% if link.is_expired %}
+                        <span class="status expired">Expired</span>
+                        {% elif not link.is_active %}
+                        <span class="status inactive">Inactive</span>
+                        {% else %}
+                        <span class="status active">Active</span>
+                        {% endif %}
+                    </td>
+                    <td class="date-cell">{{ link.created_at.strftime('%b %d, %Y') }}</td>
+                    <td class="actions-cell">
+                        <a href="{{ url_for('link_detail', link_id=link.id) }}" class="btn btn-small">Stats</a>
+                        <button class="btn btn-small btn-danger" onclick="deleteLink({{ link.id }})">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state-large">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        <h3>No Links Yet</h3>
+        <p>Create your first short link from the dashboard.</p>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

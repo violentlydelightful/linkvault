@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{{ link.title or link.short_code }} - LinkVault{% endblock %}
+
+{% block content %}
+<div class="link-detail">
+    <header class="detail-header">
+        <div class="header-info">
+            <a href="{{ url_for('all_links') }}" class="back-link">&larr; All Links</a>
+            <h1>{{ link.title or link.domain }}</h1>
+            <div class="link-urls">
+                <div class="original-url">
+                    <span class="label">Original:</span>
+                    <a href="{{ link.original_url }}" target="_blank">{{ link.original_url | truncate(80) }}</a>
+                </div>
+                <div class="short-url">
+                    <span class="label">Short:</span>
+                    <a href="{{ link.short_url }}" target="_blank">{{ link.short_url }}</a>
+                    <button class="btn btn-copy-small" onclick="copyToClipboard('{{ link.short_url }}')">Copy</button>
+                </div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <span class="status {% if link.is_active and not link.is_expired %}active{% else %}inactive{% endif %}">
+                {% if link.is_expired %}Expired{% elif link.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+            <button class="btn btn-secondary" onclick="toggleActive({{ link.id }}, {{ 'false' if link.is_active else 'true' }})">
+                {{ 'Deactivate' if link.is_active else 'Activate' }}
+            </button>
+        </div>
+    </header>
+
+    <!-- Stats Overview -->
+    <section class="stats-row">
+        <div class="stat-card compact">
+            <div class="stat-value">{{ link.total_clicks }}</div>
+            <div class="stat-label">Total Clicks</div>
+        </div>
+        <div class="stat-card compact">
+            <div class="stat-value">{{ link.clicks_last_days(7) | length }}</div>
+            <div class="stat-label">Last 7 Days</div>
+        </div>
+        <div class="stat-card compact">
+            <div class="stat-value">{{ link.clicks_last_days(1) | length }}</div>
+            <div class="stat-label">Today</div>
+        </div>
+        <div class="stat-card compact">
+            <div class="stat-value">{{ link.created_at.strftime('%b %d') }}</div>
+            <div class="stat-label">Created</div>
+        </div>
+    </section>
+
+    <!-- Click Chart -->
+    <section class="chart-section">
+        <h2>Clicks Over Time (30 Days)</h2>
+        <div class="chart-container large">
+            <div class="chart" id="clicks-chart">
+                {% for data in chart_data %}
+                <div class="chart-bar-group">
+                    <div class="chart-bar" style="height: {{ [data.clicks * 5, 100] | min }}%;" data-value="{{ data.clicks }}"></div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Breakdown -->
+    <div class="analytics-grid">
+        <section class="analytics-card">
+            <h3>Devices</h3>
+            {% if devices %}
+            <div class="breakdown-list">
+                {% for device, count in devices.items() %}
+                <div class="breakdown-item">
+                    <span class="breakdown-name">{{ device | title }}</span>
+                    <div class="breakdown-bar">
+                        <div class="breakdown-fill" style="width: {{ (count / link.total_clicks * 100) | int }}%"></div>
+                    </div>
+                    <span class="breakdown-value">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-data">No click data yet</p>
+            {% endif %}
+        </section>
+
+        <section class="analytics-card">
+            <h3>Browsers</h3>
+            {% if browsers %}
+            <div class="breakdown-list">
+                {% for browser, count in browsers.items() %}
+                <div class="breakdown-item">
+                    <span class="breakdown-name">{{ browser }}</span>
+                    <div class="breakdown-bar">
+                        <div class="breakdown-fill" style="width: {{ (count / link.total_clicks * 100) | int }}%"></div>
+                    </div>
+                    <span class="breakdown-value">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-data">No click data yet</p>
+            {% endif %}
+        </section>
+
+        <section class="analytics-card">
+            <h3>Referrers</h3>
+            {% if referrers %}
+            <div class="breakdown-list">
+                {% for ref, count in referrers.items() %}
+                <div class="breakdown-item">
+                    <span class="breakdown-name">{{ ref | truncate(25) }}</span>
+                    <div class="breakdown-bar">
+                        <div class="breakdown-fill" style="width: {{ (count / link.total_clicks * 100) | int }}%"></div>
+                    </div>
+                    <span class="breakdown-value">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-data">No click data yet</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

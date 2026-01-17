@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - LinkVault{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <!-- Create Link Section -->
+    <section class="create-section">
+        <h2>Shorten a Link</h2>
+        <form id="create-form" class="create-form">
+            <div class="input-group">
+                <input type="url" id="url-input" placeholder="Paste your long URL here..." required>
+                <button type="submit" class="btn btn-primary">Shorten</button>
+            </div>
+            <div class="create-options">
+                <div class="option-group">
+                    <label for="title-input">Title (optional)</label>
+                    <input type="text" id="title-input" placeholder="Link title for reference">
+                </div>
+                <div class="option-group">
+                    <label for="custom-code">Custom code (optional)</label>
+                    <input type="text" id="custom-code" placeholder="my-link" pattern="[a-zA-Z0-9-_]+">
+                </div>
+            </div>
+        </form>
+        <div id="result-box" class="result-box" style="display: none;">
+            <div class="result-content">
+                <span class="result-label">Your short link:</span>
+                <div class="result-link">
+                    <a id="result-url" href="#" target="_blank"></a>
+                    <button class="btn btn-copy" onclick="copyLink()">Copy</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Cards -->
+    <section class="stats-section">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ total_links }}</div>
+                <div class="stat-label">Total Links</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ total_clicks }}</div>
+                <div class="stat-label">Total Clicks</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ active_links }}</div>
+                <div class="stat-label">Active Links</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chart Section -->
+    <section class="chart-section">
+        <h2>Clicks (Last 7 Days)</h2>
+        <div class="chart-container">
+            <div class="chart" id="clicks-chart">
+                {% for data in chart_data %}
+                <div class="chart-bar-group">
+                    <div class="chart-bar" style="height: {{ [data.clicks * 10, 100] | min }}%;" data-value="{{ data.clicks }}"></div>
+                    <div class="chart-label">{{ data.date[-5:] }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Links -->
+    <section class="links-section">
+        <div class="section-header">
+            <h2>Recent Links</h2>
+            <a href="{{ url_for('all_links') }}" class="view-all">View All</a>
+        </div>
+        {% if links %}
+        <div class="links-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Link</th>
+                        <th>Short URL</th>
+                        <th>Clicks</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for link in links %}
+                    <tr>
+                        <td class="link-cell">
+                            <div class="link-title">{{ link.title or link.domain }}</div>
+                            <div class="link-url">{{ link.original_url | truncate(50) }}</div>
+                        </td>
+                        <td>
+                            <code class="short-code">/r/{{ link.short_code }}</code>
+                        </td>
+                        <td class="clicks-cell">{{ link.total_clicks }}</td>
+                        <td class="date-cell">{{ link.created_at.strftime('%b %d') }}</td>
+                        <td>
+                            <a href="{{ url_for('link_detail', link_id=link.id) }}" class="btn btn-small">Stats</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No links yet. Create your first short link above!</p>
+            <p><a href="{{ url_for('seed_demo_data') }}">Or load demo data to explore.</a></p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
